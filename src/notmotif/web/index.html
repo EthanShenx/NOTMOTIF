@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOTMOTIF</title>
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --panel: #ffffff;
+    --ink: #1c1b19;
+    --muted: #6d6a63;
+    --line: #e3e0d8;
+    --accent: #0a00c2;
+    --green: #5cc83e; --blue: #0a00c2; --orange: #f5b23c; --red: #bf2a1f;
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    display: grid; grid-template-columns: 340px minmax(0, 1fr); grid-template-rows: auto 1fr;
+  }
+  header {
+    grid-column: 1 / -1; display: flex; align-items: baseline; gap: 14px;
+    padding: 14px 22px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .wordmark { font-weight: 800; font-size: 20px; letter-spacing: .02em; }
+  .wordmark span:nth-child(4n+1) { color: var(--red); }
+  .wordmark span:nth-child(4n+2) { color: var(--green); }
+  .wordmark span:nth-child(4n+3) { color: var(--blue); }
+  .wordmark span:nth-child(4n+4) { color: var(--orange); }
+  header .tag { color: var(--muted); }
+  header .ver { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+
+  aside {
+    background: var(--panel); border-right: 1px solid var(--line);
+    overflow-y: auto; padding: 18px 20px 40px;
+  }
+  .wordbox { display: flex; gap: 8px; margin-bottom: 6px; }
+  #word {
+    flex: 1; min-width: 0; font-family: inherit; font-weight: 700; font-size: 22px; line-height: 1.2; padding: 10px 12px; letter-spacing: .04em;
+    border: 1.5px solid var(--ink); border-radius: var(--radius); background: #fff; color: var(--ink);
+  }
+  #word:focus { outline: 3px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; min-height: 30px; }
+  label.chip {
+    position: relative; width: 30px; height: 30px; border-radius: 7px; display: flex; justify-content: center; align-items: center;
+    font-weight: 800; color: #fff; cursor: pointer; font-size: 15px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .chip input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .chip.custom::after {
+    content: ""; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--ink); border: 2px solid #fff;
+  }
+  .hint { color: var(--muted); font-size: 12px; }
+
+  details { border-top: 1px solid var(--line); padding: 12px 0 4px; }
+  details:first-of-type { margin-top: 14px; }
+  summary {
+    cursor: pointer; font-weight: 650; list-style: none; display: flex; justify-content: space-between;
+    padding-bottom: 8px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--muted); font-weight: 400; }
+  details[open] summary::after { content: "−"; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .row .field { margin-bottom: 0; }
+  label, .lbl { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  label output { font-family: var(--mono); color: var(--ink); }
+  input[type=number], input[type=text], select {
+    width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px;
+    font: inherit; background: #fff; color: var(--ink);
+  }
+  input[type=range] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
+  .toggle { display: flex; justify-content: flex-start; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); margin-bottom: 10px; cursor: pointer; }
+  .toggle input { accent-color: var(--ink); width: 16px; height: 16px; }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  button {
+    font: inherit; cursor: pointer; border-radius: 7px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink); padding: 6px 10px;
+  }
+  button:hover { border-color: var(--ink); }
+  button.primary { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
+  button.primary:hover { background: #3a3833; }
+  .inline { display: flex; gap: 6px; }
+  .inline input { flex: 1; }
+  input[type=color] { width: 40px; height: 34px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+
+  main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .stage {
+    flex: 1; display: grid; place-items: center; padding: 28px; min-height: 280px; position: relative;
+  }
+  .frame {
+    max-width: 100%; max-height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 30px rgba(0,0,0,.06);
+    background-color: #fff; border-radius: 4px; overflow: hidden; line-height: 0;
+  }
+  .frame.checker {
+    background-image: conic-gradient(#eee 25%, #fff 0 50%, #eee 0 75%, #fff 0);
+    background-size: 16px 16px;
+  }
+  #preview { max-width: 100%; max-height: calc(100vh - 260px); display: block; transition: opacity .15s; }
+  #preview.loading { opacity: .55; }
+  .dims { position: absolute; bottom: 8px; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .error {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    background: #fff1ef; color: var(--red); border: 1px solid #f3c6c0; padding: 8px 12px; border-radius: 8px;
+    display: none; max-width: 90%;
+  }
+  .bar {
+    border-top: 1px solid var(--line); background: var(--panel); padding: 14px 22px;
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  }
+  .bar .downloads { display: flex; gap: 6px; }
+  .code {
+    flex: 1; min-width: 240px; display: flex; gap: 6px; align-items: stretch;
+  }
+  .code pre {
+    flex: 1; margin: 0; font: 12px/1.5 var(--mono); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 7px; padding: 7px 10px; overflow-x: auto; white-space: pre; color: var(--ink);
+  }
+  .tabs { display: flex; flex-direction: column; gap: 4px; }
+  .tabs button { font-size: 12px; padding: 3px 8px; }
+  .tabs button[aria-pressed=true] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  @media (max-width: 820px) {
+    html, body { height: auto; }
+    body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; }
+    .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; padding: 16px; }
+    .stage { padding: 16px; }
+    #preview { max-height: none; }
+    header { padding: 12px 16px; }
+    header .tag { display: none; }
+    .bar { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark" aria-label="NOTMOTIF"><span>N</span><span>O</span><span>T</span><span>M</span><span>O</span><span>T</span><span>I</span><span>F</span></div>
+  <div class="tag">words as sequence logos</div>
+  <div class="ver" id="ver"></div>
+</header>
+
+<aside>
+  <div class="wordbox">
+    <input id="word" data-key="word" value="Happy" maxlength="64" autocomplete="off" spellcheck="false" aria-label="Word">
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="hint">Click a letter to recolor it. <a href="#" id="resetColors">Reset colors</a></div>
+
+  <details open>
+    <summary>Canvas</summary>
+    <div class="presets">
+      <button data-size="800x400">800×400</button>
+      <button data-size="1200x400">1200×400</button>
+      <button data-size="1000x1000">Square</button>
+      <button data-size="1920x1080">1920×1080</button>
+    </div>
+    <div class="row">
+      <div class="field"><label for="width">Width (px)</label><input type="number" id="width" data-key="width" min="16" max="8000"></div>
+      <div class="field"><label for="height">Height (px)</label><input type="number" id="height" data-key="height" min="16" max="8000"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="dpi">DPI</label><input type="number" id="dpi" data-key="dpi" min="10" max="1200"></div>
+      <div class="field"><label class="lbl" for="bgcolor">Background</label>
+        <div class="inline"><input type="color" id="bgcolor" value="#ffffff">
+          <label class="toggle" style="margin:0"><input type="checkbox" id="transparent"> None</label></div>
+      </div>
+    </div>
+    <div class="field"><label for="margin">Margin <output></output></label><input type="range" id="margin" data-key="margin" min="0" max="0.3" step="0.01"></div>
+  </details>
+
+  <details open>
+    <summary>Letters</summary>
+    <div class="field"><label for="color_scheme">Color scheme</label><select id="color_scheme" data-key="color_scheme"></select></div>
+    <div class="field" id="monoField" hidden><label for="mono_color">Mono color</label><input type="color" id="mono_color" data-key="mono_color"></div>
+    <div class="field"><label for="font">Font (family name)</label><input type="text" id="font" data-key="font" placeholder="auto"></div>
+    <div class="field"><label for="letter_spacing">Letter spacing <output></output></label><input type="range" id="letter_spacing" data-key="letter_spacing" min="0" max="0.5" step="0.01"></div>
+    <label class="toggle"><input type="checkbox" id="uppercase" data-key="uppercase"> Uppercase</label>
+  </details>
+
+  <details open>
+    <summary>Motif shape</summary>
+    <div class="field"><label for="min_height">Min column height <output></output></label><input type="range" id="min_height" data-key="min_height" min="0.05" max="1" step="0.01"></div>
+    <div class="field"><label for="max_height">Max column height <output></output></label><input type="range" id="max_height" data-key="max_height" min="0.05" max="1" step="0.01"></div>
+    <div class="field"><label for="stack_probability">Stacked letters <output></output></label><input type="range" id="stack_probability" data-key="stack_probability" min="0" max="1" step="0.01"></div>
+    <div class="field"><label for="stack_max">Stacked letter size <output></output></label><input type="range" id="stack_max" data-key="stack_max" min="0" max="0.6" step="0.01"></div>
+    <div class="field"><label for="noise">Residue noise <output></output></label><input type="range" id="noise" data-key="noise" min="0" max="1" step="0.01"></div>
+    <div class="field"><label for="noise_max_height">Residue size <output></output></label><input type="range" id="noise_max_height" data-key="noise_max_height" min="0" max="0.2" step="0.005"></div>
+    <div class="field"><label for="noise_alphabet">Residue alphabet</label><input type="text" id="noise_alphabet" data-key="noise_alphabet"></div>
+    <div class="field"><label for="blur">Blur (px) <output></output></label><input type="range" id="blur" data-key="blur" min="0" max="6" step="0.1"></div>
+    <div class="field"><label for="seed">Seed</label>
+      <div class="inline"><input type="number" id="seed" data-key="seed" placeholder="from word"><button id="shuffle" title="Random seed">Shuffle</button></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Axis</summary>
+    <label class="toggle"><input type="checkbox" id="show_axis" data-key="show_axis"> Show axis</label>
+    <div class="row">
+      <div class="field"><label for="axis_label">Label</label><input type="text" id="axis_label" data-key="axis_label"></div>
+      <div class="field"><label for="max_bits">Max value</label><input type="number" id="max_bits" data-key="max_bits" step="0.1" min="0.1"></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Reset</summary>
+    <button id="resetAll">Restore all defaults</button>
+  </details>
+</aside>
+
+<main>
+  <div class="stage">
+    <div class="error" id="error" role="alert"></div>
+    <div class="frame" id="frame"><img id="preview" alt="Motif preview"></div>
+    <div class="dims" id="dims"></div>
+  </div>
+  <div class="bar">
+    <div class="downloads">
+      <button class="primary" data-dl="png">PNG</button>
+      <button data-dl="svg">SVG</button>
+      <button data-dl="pdf">PDF</button>
+      <button data-dl="jpg">JPG</button>
+    </div>
+    <div class="code">
+      <div class="tabs">
+        <button id="tabPy" aria-pressed="true">Python</button>
+        <button id="tabCli" aria-pressed="false">CLI</button>
+      </div>
+      <pre id="code"></pre>
+      <button id="copy">Copy</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let defaults = {};
+let customColors = {};
+let codeMode = "py";
+let timer = null, reqId = 0, lastUrl = null;
+
+const inputs = [...document.querySelectorAll("[data-key]")];
+
+function showValue(el) {
+  const out = el.parentElement.querySelector("output");
+  if (out) out.textContent = (+el.value).toFixed(el.step && +el.step < 0.01 ? 3 : 2).replace(/\.?0+$/, "") || "0";
+}
+
+function applyState(state) {
+  for (const el of inputs) {
+    const v = state[el.dataset.key];
+    if (v === undefined) continue;
+    if (el.type === "checkbox") el.checked = !!v;
+    else el.value = v === null ? "" : v;
+    showValue(el);
+  }
+  const bg = state.background || "white";
+  $("#transparent").checked = bg === "transparent";
+  $("#bgcolor").value = bg.startsWith("#") ? bg : "#ffffff";
+  customColors = { ...(state.colors || {}) };
+}
+
+function params() {
+  const p = {};
+  for (const el of inputs) {
+    const k = el.dataset.key;
+    if (el.type === "checkbox") p[k] = el.checked;
+    else if (el.value !== "") p[k] = el.value;
+  }
+  const bg = $("#bgcolor").value;
+  p.background = $("#transparent").checked ? "transparent" : (bg === "#ffffff" ? "white" : bg);
+  p.stack_min = Math.min(+defaults.stack_min, +p.stack_max);
+  const c = Object.entries(customColors).map(([k, v]) => `${k}=${v}`).join(",");
+  if (c) p.colors = c;
+  return p;
+}
+
+function query(p, extra = {}) {
+  return new URLSearchParams({ ...p, ...extra }).toString();
+}
+
+function changedFromDefaults(p) {
+  const out = {};
+  for (const [k, v] of Object.entries(p)) {
+    if (k === "word") continue;
+    const d = defaults[k];
+    if (d === undefined) { out[k] = v; continue; }
+    if (typeof d === "boolean" ? d !== v : String(d) !== String(v)) out[k] = v;
+  }
+  return out;
+}
+
+function renderCode(p) {
+  const ch = changedFromDefaults(p);
+  const word = JSON.stringify(p.word || "");
+  let text;
+  if (codeMode === "py") {
+    const args = Object.entries(ch).map(([k, v]) => {
+      if (k === "colors") return `colors={${v.split(",").map(s => { const [a, b] = s.split("="); return `${JSON.stringify(a)}: ${JSON.stringify(b)}`; }).join(", ")}}`;
+      if (typeof v === "boolean") return `${k}=${v ? "True" : "False"}`;
+      if (typeof defaults[k] === "number" || k === "seed") return `${k}=${v}`;
+      return `${k}=${JSON.stringify(v)}`;
+    });
+    text = `import notmotif\nnotmotif.save(${[word, '"motif.png"', ...args].join(", ")})`;
+  } else {
+    const flags = Object.entries(ch).map(([k, v]) => {
+      const f = "--" + k.replace(/_/g, "-");
+      if (typeof v === "boolean") return v ? f : f.replace("--", "--no-");
+      return `${f} ${/^[\w.#-]+$/.test(String(v)) ? v : `'${v}'`}`;
+    });
+    text = ["notmotif", `'${(p.word || "").replace(/'/g, "")}'`, "-o motif.png", ...flags].join(" ");
+  }
+  $("#code").textContent = text;
+}
+
+async function renderChips(p) {
+  const r = await fetch("/api/palette?" + query({ word: p.word, color_scheme: p.color_scheme, mono_color: p.mono_color, uppercase: p.uppercase, colors: p.colors || "" }));
+  if (!r.ok) return;
+  const pal = await r.json();
+  const box = $("#chips");
+  box.textContent = "";
+  for (const [ch, color] of Object.entries(pal)) {
+    const chip = document.createElement("label");
+    chip.className = "chip" + (customColors[ch] ? " custom" : "");
+    chip.style.background = color;
+    chip.textContent = ch;
+    chip.title = `Color for ${ch}`;
+    const pick = document.createElement("input");
+    pick.type = "color";
+    pick.value = toHex(color);
+    pick.addEventListener("input", () => { chip.style.background = pick.value; });
+    pick.addEventListener("change", () => { customColors[ch] = pick.value; update(); });
+    chip.appendChild(pick);
+    box.appendChild(chip);
+  }
+}
+
+function toHex(c) {
+  const ctx = document.createElement("canvas").getContext("2d");
+  ctx.fillStyle = c; return ctx.fillStyle.startsWith("#") ? ctx.fillStyle : "#000000";
+}
+
+async function render() {
+  const p = params();
+  const id = ++reqId;
+  $("#monoField").hidden = p.color_scheme !== "mono";
+  $("#frame").classList.toggle("checker", p.background === "transparent");
+  renderCode(p);
+  renderChips(p);
+  try { localStorage.setItem("notmotif", JSON.stringify({ ...p, colors: customColors })); } catch (e) {}
+  if (!(p.word || "").trim()) { showError("Type a word to draw."); return; }
+  $("#preview").classList.add("loading");
+  try {
+    const r = await fetch("/api/render?" + query(p));
+    if (id !== reqId) return;
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || r.statusText); }
+    const blob = await r.blob();
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = URL.createObjectURL(blob);
+    $("#preview").src = lastUrl;
+    $("#dims").textContent = `${p.width} × ${p.height} px`;
+    showError("");
+  } catch (e) {
+    if (id === reqId) showError(e.message);
+  } finally {
+    if (id === reqId) $("#preview").classList.remove("loading");
+  }
+}
+
+function showError(msg) {
+  const el = $("#error");
+  el.textContent = msg; el.style.display = msg ? "block" : "none";
+}
+
+function update() { clearTimeout(timer); timer = setTimeout(render, 160); }
+
+for (const el of inputs) {
+  el.addEventListener("input", () => { showValue(el); update(); });
+}
+$("#bgcolor").addEventListener("input", () => { $("#transparent").checked = false; update(); });
+$("#transparent").addEventListener("change", update);
+$("#shuffle").addEventListener("click", () => { $("#seed").value = Math.floor(Math.random() * 1e6); update(); });
+$("#resetColors").addEventListener("click", (e) => { e.preventDefault(); customColors = {}; update(); });
+$("#resetAll").addEventListener("click", () => { applyState({ ...defaults, word: $("#word").value }); update(); });
+document.querySelectorAll("[data-size]").forEach(b => b.addEventListener("click", () => {
+  const [w, h] = b.dataset.size.split("x"); $("#width").value = w; $("#height").value = h; update();
+}));
+document.querySelectorAll("[data-dl]").forEach(b => b.addEventListener("click", () => {
+  window.location = "/api/render?" + query(params(), { format: b.dataset.dl, download: 1 });
+}));
+$("#tabPy").addEventListener("click", () => { codeMode = "py"; $("#tabPy").setAttribute("aria-pressed", "true"); $("#tabCli").setAttribute("aria-pressed", "false"); renderCode(params()); });
+$("#tabCli").addEventListener("click", () => { codeMode = "cli"; $("#tabCli").setAttribute("aria-pressed", "true"); $("#tabPy").setAttribute("aria-pressed", "false"); renderCode(params()); });
+$("#copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("#code").textContent); $("#copy").textContent = "Copied"; }
+  catch (e) { $("#copy").textContent = "Select & copy"; }
+  setTimeout(() => $("#copy").textContent = "Copy", 1200);
+});
+
+(async function init() {
+  const meta = await (await fetch("/api/meta")).json();
+  defaults = meta.defaults;
+  $("#ver").textContent = "v" + meta.version;
+  const sel = $("#color_scheme");
+  for (const [name, desc] of Object.entries(meta.schemes)) {
+    const o = document.createElement("option"); o.value = name; o.textContent = name; o.title = desc; sel.appendChild(o);
+  }
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("notmotif") || "{}"); } catch (e) {}
+  applyState({ ...defaults, seed: "", word: "Happy", ...saved });
+  render();
+})();
+</script>
+</body>
+</html>
